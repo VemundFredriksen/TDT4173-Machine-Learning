@@ -26,7 +26,7 @@ y : predicted value
 t : truth
 '''
 def loss(y, t):
-    return 0.5*(t - y[0,0])**2
+    return 0.5*((t - y[0,0])**2)[0]
 
 def loss_derivative(y, t):
     return y - t
@@ -58,17 +58,11 @@ def calculate_deltas(network, x, t):
 
     #Calculate Delta for the rest of the layers backwards
     for i in range(len(network) - 2, -1, -1):
-       #d1 = network[i + 1][:,:-1]
-       #d3 = vector_sigmoid_derivative(zums[i])
-       #d3.shape = (len(d3), 1)
-       #d = d1.T * d3
        last_delta = network[i + 1][:,:-1].T.dot(last_delta)  * vector_sigmoid_derivative(zums[i])
        deltas.append(last_delta * np.append(activations[i], [1]))
 
     deltas.reverse()
     return deltas
-
-
 
 def update_weights(network, deltas, learning_rate):
     if(len(network) != len(deltas)):
@@ -101,7 +95,7 @@ def fit(network, data, truths, learning_rate = 0.05, epochs = 100, early_stop = 
             epochLoss += loss(prediction, truths[i])
             deltas = calculate_deltas(network, data[i], truths[i])
             update_weights(network, deltas, learning_rate)
-        losses.append(epochLoss[0]/len(data))
+        losses.append(epochLoss/len(data))
 
     return losses
 
@@ -153,9 +147,9 @@ def init():
 
 net = init()
 
-# w1 = np.array([[4, 4, -2], [-3, -3, 5]])
-# w2 = np.array([[5,5,-5]])
-# net = [w1, w2]
+#w1 = np.array([[4, 4, -2], [-3, -3, 5]])
+#w2 = np.array([[5,5,-5]])
+#net = [w1, w2]
 
 data = [np.array([0, 0]), np.array([0, 1]), np.array([1, 0]), np.array([1, 1])]
 truths = [[-1], [1], [1], [-1]]
@@ -167,7 +161,7 @@ print("0,1 : {} ".format(predict(net, [0,1])))
 print("1,0 : {} ".format(predict(net, [1,0])))
 print("1,1 : {} ".format(predict(net, [1,1])))
 
-lss = fit(net, data, truths, learning_rate=0.15, epochs=100)
+lss = fit(net, data, truths, learning_rate=0.01, epochs=900)
 
 print("0,0 : {} ".format(predict(net, [0,0])))
 print("0,1 : {} ".format(predict(net, [0,1])))

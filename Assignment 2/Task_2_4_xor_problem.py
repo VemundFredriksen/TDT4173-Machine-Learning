@@ -33,11 +33,11 @@ t : truth
 def cross_entropy(y, t):
     return 0.5*((t - y[0,0])**2)[0]
 
-def loss_derivative(y, t):
+def cross_entropy_derivative(y, t):
     return y - t
 
 # ======================== Training ======================== #
-def calculate_deltas(network, x, t):
+def calculate_deltas(network, x, t, loss_derivative):
     deltas = []
     activations = []
     zums = []
@@ -87,7 +87,7 @@ epochs : maximum number of epochs
 early_stop: stops the training if it manages a whole epoch with precision = recall = 1.0
 TODO : implement early stop
 '''
-def fit(network, data, truths, learning_rate = 0.05, epochs = 100, early_stop = False):
+def fit(network, data, truths, loss_function, loss_derivative, learning_rate = 0.05, epochs = 100, early_stop = False):
     if(len(data) != len(truths)):
         print("Training data is not aligned with truth-data")
         exit()
@@ -98,8 +98,8 @@ def fit(network, data, truths, learning_rate = 0.05, epochs = 100, early_stop = 
         epochLoss = 0
         for i in range(len(data)):
             prediction = predict(network, data[i])
-            epochLoss += cross_entropy(prediction, truths[i])
-            deltas = calculate_deltas(network, data[i], truths[i])
+            epochLoss += loss_function(prediction, truths[i])
+            deltas = calculate_deltas(network, data[i], truths[i], loss_derivative)
             update_weights(network, deltas, learning_rate)
         losses.append(epochLoss/len(data))
 
@@ -181,7 +181,7 @@ def task_2_4():
     epochs = 1500
 
     print("Training the network\nlearning rate: {}\nepochs: {}\nTraining...\n".format(learning_rate, epochs))
-    losses = fit(net, data, truths, learning_rate, epochs)
+    losses = fit(net, data, truths, cross_entropy, cross_entropy_derivative, learning_rate, epochs)
     print("Training finished!\n")
 
     print("Networks prediction after training:\n")
@@ -197,11 +197,22 @@ from sklearn.datasets import load_digits
 
 def task_2_5():
     #Loads the images and labels
-    digits = load_digits()
+    data = load_digits()
 
     w1 = random_weights(64, 32)
     w2 = random_weights(32, 10)
-    net = [w1, w2]
+
+    l1 = Layer()
+    l1.weights = w1
+    l1.activation_function = vector_sigmoid
+    l1.activation_derivative = vector_sigmoid_derivative
+
+    l2 = Layer()
+    l2.weights = w2
+    l2.activation_function = vector_sigmoid
+    l2.activation_derivative = vector_sigmoid_derivative
+
+    net = [l1, l2]
 
     #fit(net, digits.data, digits.target, learning_rate=0.5, epochs=1000)
 

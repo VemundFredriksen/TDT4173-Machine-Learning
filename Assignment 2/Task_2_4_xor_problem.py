@@ -38,8 +38,7 @@ def calculate_deltas(network, x, t):
     zums = []
 
     x = np.array(x)
-    x.shape = (2,1)
-    activations.append(np.array(x))
+    activations.append(x)
 
     x = np.copy(activations[0])
     for layer in network:
@@ -51,15 +50,23 @@ def calculate_deltas(network, x, t):
         activations.append(x)
 
     #Calculate Delta for last layer
+    xxxx = loss_derivative(activations[-1], t)
     last_delta = loss_derivative(activations[-1], t) * (vector_sigmoid_derivative(zums[-1]))
-    ac = np.append(activations[-2], [1]) #Adds one so the last element is the bias-delta
-    ac.shape = (network[-1].shape[0], len(ac))
-    deltas.append(last_delta * ac)
+    ac = np.append(activations[-2], [1])
+    ac = ac.T
+    ac = np.vstack([np.copy(ac) for i in range(last_delta.shape[0])])
+    deltas.append(ac * last_delta)
 
     #Calculate Delta for the rest of the layers backwards
     for i in range(len(network) - 2, -1, -1):
-       last_delta = network[i + 1][:,:-1].T.dot(last_delta)  * vector_sigmoid_derivative(zums[i])
-       deltas.append(last_delta * np.append(activations[i], [1]))
+        last_delta = network[i + 1][::,:-1].T.dot(last_delta) * sigmoid_derivative(zums[i])
+        ac = np.append(activations[i], [1])
+        ac = ac.T
+        ac = np.vstack([np.copy(ac) for i in range(last_delta.shape[0])])
+        deltas.append(ac * last_delta)
+        #last_delta = network[i + 1][::,:-1].T.dot(last_delta)  * vector_sigmoid_derivative(zums[i])
+        #deltas.append(activations[i].dot(last_delta.T))
+        #deltas.append(last_delta * np.append(activations[i], [1]))
 
     deltas.reverse()
     return deltas
@@ -67,7 +74,7 @@ def calculate_deltas(network, x, t):
 def update_weights(network, deltas, learning_rate):
     if(len(network) != len(deltas)):
         print("The deltas given does not match the number of layers in the network!")
-        return None
+        exit()
 
     for i in range(len(network)):
         network[i] = network[i] - (learning_rate * deltas[i])
@@ -84,7 +91,7 @@ TODO : implement early stop
 def fit(network, data, truths, learning_rate = 0.05, epochs = 100, early_stop = False):
     if(len(data) != len(truths)):
         print("Training data is not aligned with truth-data")
-        return None
+        exit()
 
     losses = []
 
@@ -133,11 +140,15 @@ l1 : number of nodes in first layer
 l2 : number of nodes in next layer
 '''
 def random_weights(l1, l2):
-    return np.array([[random.uniform(-1, 1) for j in range(l1 + 1)] for i in range(l2)])
+    w = np.array([[np.random.normal(-1, 1) for j in range(l1 + 1)] for i in range(l2)])
+    w.shape = (l2, l1+1)
+
+    return w
 
 def init():
     w1 = random_weights(2, 2)
     w2 = random_weights(2, 1)
+    # wx = random_weights(2,2)
 
     net = [w1, w2]
     
@@ -151,23 +162,33 @@ net = init()
 #w2 = np.array([[5,5,-5]])
 #net = [w1, w2]
 
+# w1 = np.array([[0.5, 0.8, -0.3],[0.3, -0.4, -0.2]])
+# w2 = np.array([[0.2], [-0.7], [0.8]])
+# w2.shape = (1,3)
+
+# net = [w1, w2]
+
+#fit(net, np.array([np.array([1,0]), np.array([0,0])]), np.array([[1], [0]]), learning_rate=0.05)
+
+#print(predict(net, [1, 0]))
+
 data = [np.array([0, 0]), np.array([0, 1]), np.array([1, 0]), np.array([1, 1])]
-truths = [[-1], [1], [1], [-1]]
+truths = [[0], [1], [1], [0]]
 
-print("\n\n{}\n\n".format(net))
-
-print("0,0 : {} ".format(predict(net, [0,0])))
-print("0,1 : {} ".format(predict(net, [0,1])))
-print("1,0 : {} ".format(predict(net, [1,0])))
-print("1,1 : {} ".format(predict(net, [1,1])))
-
-lss = fit(net, data, truths, learning_rate=0.01, epochs=900)
+# print("\n\n{}\n\n".format(net))
 
 print("0,0 : {} ".format(predict(net, [0,0])))
 print("0,1 : {} ".format(predict(net, [0,1])))
 print("1,0 : {} ".format(predict(net, [1,0])))
 print("1,1 : {} ".format(predict(net, [1,1])))
 
-print("\n\n{}\n\n".format(net))
+lss = fit(net, data, truths, learning_rate=0.25, epochs=15000)
+
+print("0,0 : {} ".format(predict(net, [0,0])))
+print("0,1 : {} ".format(predict(net, [0,1])))
+print("1,0 : {} ".format(predict(net, [1,0])))
+print("1,1 : {} ".format(predict(net, [1,1])))
+
+# print("\n\n{}\n\n".format(net))
 
 plot_loss(lss)

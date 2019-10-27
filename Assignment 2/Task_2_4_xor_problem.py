@@ -2,6 +2,11 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
+class Layer:
+    weights = []
+    activation_function = None
+    activation_derivative = None
+
 # ======================== Forward Pass ======================== #
 #Macros for sigmoid and vectorization of sigmoid
 sigmoid = lambda x: 1/(1 + np.exp(-x))
@@ -25,7 +30,7 @@ def a(z):
 y : predicted value
 t : truth
 '''
-def loss(y, t):
+def cross_entropy(y, t):
     return 0.5*((t - y[0,0])**2)[0]
 
 def loss_derivative(y, t):
@@ -44,8 +49,8 @@ def calculate_deltas(network, x, t):
     for layer in network:
         x = np.append(x, [1])
         x.shape = (len(x), 1)
-        s = z(layer, x)
-        x = a(s)
+        s = z(layer.weights, x)
+        x = layer.activation_function(s)
         zums.append(s)
         activations.append(x)
 
@@ -57,7 +62,7 @@ def calculate_deltas(network, x, t):
 
     #Calculate Delta for the rest of the layers backwards
     for i in range(len(network) - 2, -1, -1):
-        last_delta = network[i + 1][::,:-1].T.dot(last_delta) * sigmoid_derivative(zums[i])
+        last_delta = network[i + 1].weights[::,:-1].T.dot(last_delta) * sigmoid_derivative(zums[i])
         ac = np.append(activations[i], [1]).T #Adds the 1 to align with bias-trick
         ac = np.vstack([np.copy(ac) for i in range(last_delta.shape[0])])
         deltas.append(ac * last_delta)
@@ -71,7 +76,7 @@ def update_weights(network, deltas, learning_rate):
         exit()
 
     for i in range(len(network)):
-        network[i] = network[i] - (learning_rate * deltas[i])
+        network[i].weights = network[i].weights - (learning_rate * deltas[i])
 
 '''
 network : the network to be trained
@@ -93,7 +98,7 @@ def fit(network, data, truths, learning_rate = 0.05, epochs = 100, early_stop = 
         epochLoss = 0
         for i in range(len(data)):
             prediction = predict(network, data[i])
-            epochLoss += loss(prediction, truths[i])
+            epochLoss += cross_entropy(prediction, truths[i])
             deltas = calculate_deltas(network, data[i], truths[i])
             update_weights(network, deltas, learning_rate)
         losses.append(epochLoss/len(data))
@@ -106,7 +111,7 @@ network : a list of the weights, length of the list defines the depth of the net
 value : the value to run prediction on, must have same size as inputnodes
 '''
 def predict(network, value):
-    if(len(value) + 1 != network[0].shape[1]):
+    if(len(value) + 1 != network[0].weights.shape[1]):
         print("Input Data does not fit network!")
         exit()
 
@@ -114,8 +119,8 @@ def predict(network, value):
     for layer in network:
         x = np.append(x, [1])
         x.shape = (len(x), 1)
-        s = z(layer, x)
-        x = a(s)
+        s = z(layer.weights, x)
+        x = layer.activation_function(s)
 
     x.shape = (len(x), 1)
     return x
@@ -146,7 +151,18 @@ def task_2_4():
     #Initializes random weights
     w1 = random_weights(2, 2)
     w2 = random_weights(2, 1)
-    net = [w1, w2]
+
+    l1 = Layer()
+    l1.weights = w1
+    l1.activation_function = vector_sigmoid
+    l1.activation_derivative = vector_sigmoid_derivative
+
+    l2 = Layer()
+    l2.weights = w2
+    l2.activation_derivative = vector_sigmoid_derivative
+    l2.activation_function = vector_sigmoid
+
+    net = [l1, l2]
 
     #Prints Results before training
     print("Networks prediction before training:\n")
@@ -176,5 +192,18 @@ def task_2_4():
 
     print("\nPlotting loss graph")
     plot_loss(losses)
+
+from sklearn.datasets import load_digits
+
+def task_2_5():
+    #Loads the images and labels
+    digits = load_digits()
+
+    w1 = random_weights(64, 32)
+    w2 = random_weights(32, 10)
+    net = [w1, w2]
+
+    #fit(net, digits.data, digits.target, learning_rate=0.5, epochs=1000)
+
 
 task_2_4()

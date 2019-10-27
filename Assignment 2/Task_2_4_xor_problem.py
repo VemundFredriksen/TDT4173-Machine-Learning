@@ -50,25 +50,19 @@ def calculate_deltas(network, x, t):
         activations.append(x)
 
     #Calculate Delta for last layer
-    xxxx = loss_derivative(activations[-1], t)
     last_delta = loss_derivative(activations[-1], t) * (vector_sigmoid_derivative(zums[-1]))
-    ac = np.append(activations[-2], [1])
-    ac = ac.T
+    ac = np.append(activations[-2], [1]).T #Adds the 1 to align with bias-trick
     ac = np.vstack([np.copy(ac) for i in range(last_delta.shape[0])])
     deltas.append(ac * last_delta)
 
     #Calculate Delta for the rest of the layers backwards
     for i in range(len(network) - 2, -1, -1):
         last_delta = network[i + 1][::,:-1].T.dot(last_delta) * sigmoid_derivative(zums[i])
-        ac = np.append(activations[i], [1])
-        ac = ac.T
+        ac = np.append(activations[i], [1]).T #Adds the 1 to align with bias-trick
         ac = np.vstack([np.copy(ac) for i in range(last_delta.shape[0])])
         deltas.append(ac * last_delta)
-        #last_delta = network[i + 1][::,:-1].T.dot(last_delta)  * vector_sigmoid_derivative(zums[i])
-        #deltas.append(activations[i].dot(last_delta.T))
-        #deltas.append(last_delta * np.append(activations[i], [1]))
 
-    deltas.reverse()
+    deltas.reverse() #Reverses the deltas so because it was generated backwards
     return deltas
 
 def update_weights(network, deltas, learning_rate):
@@ -114,7 +108,7 @@ value : the value to run prediction on, must have same size as inputnodes
 def predict(network, value):
     if(len(value) + 1 != network[0].shape[1]):
         print("Input Data does not fit network!")
-        return None
+        exit()
 
     x = np.copy(value)
     for layer in network:
@@ -145,50 +139,42 @@ def random_weights(l1, l2):
 
     return w
 
-def init():
+# ======================== Assignment Tasks ======================== #
+
+def task_2_4():
+
+    #Initializes random weights
     w1 = random_weights(2, 2)
     w2 = random_weights(2, 1)
-    # wx = random_weights(2,2)
-
     net = [w1, w2]
-    
-    return net
 
+    #Prints Results before training
+    print("Networks prediction before training:\n")
+    print("0,0 : {} ".format(predict(net, [0,0])))
+    print("0,1 : {} ".format(predict(net, [0,1])))
+    print("1,0 : {} ".format(predict(net, [1,0])))
+    print("1,1 : {} ".format(predict(net, [1,1])))
+    print("\n")
 
+    #Declaration of training data and truth values
+    data = [np.array([0, 0]), np.array([0, 1]), np.array([1, 0]), np.array([1, 1])]
+    truths = [[0], [1], [1], [0]]
 
-net = init()
+    #Train the network
+    learning_rate = 0.8
+    epochs = 1500
 
-#w1 = np.array([[4, 4, -2], [-3, -3, 5]])
-#w2 = np.array([[5,5,-5]])
-#net = [w1, w2]
+    print("Training the network\nlearning rate: {}\nepochs: {}\nTraining...\n".format(learning_rate, epochs))
+    losses = fit(net, data, truths, learning_rate, epochs)
+    print("Training finished!\n")
 
-# w1 = np.array([[0.5, 0.8, -0.3],[0.3, -0.4, -0.2]])
-# w2 = np.array([[0.2], [-0.7], [0.8]])
-# w2.shape = (1,3)
+    print("Networks prediction after training:\n")
+    print("0,0 : {} ".format(predict(net, [0,0])))
+    print("0,1 : {} ".format(predict(net, [0,1])))
+    print("1,0 : {} ".format(predict(net, [1,0])))
+    print("1,1 : {} ".format(predict(net, [1,1])))
 
-# net = [w1, w2]
+    print("\nPlotting loss graph")
+    plot_loss(losses)
 
-#fit(net, np.array([np.array([1,0]), np.array([0,0])]), np.array([[1], [0]]), learning_rate=0.05)
-
-#print(predict(net, [1, 0]))
-
-data = [np.array([0, 0]), np.array([0, 1]), np.array([1, 0]), np.array([1, 1])]
-truths = [[0], [1], [1], [0]]
-
-# print("\n\n{}\n\n".format(net))
-
-print("0,0 : {} ".format(predict(net, [0,0])))
-print("0,1 : {} ".format(predict(net, [0,1])))
-print("1,0 : {} ".format(predict(net, [1,0])))
-print("1,1 : {} ".format(predict(net, [1,1])))
-
-lss = fit(net, data, truths, learning_rate=0.25, epochs=15000)
-
-print("0,0 : {} ".format(predict(net, [0,0])))
-print("0,1 : {} ".format(predict(net, [0,1])))
-print("1,0 : {} ".format(predict(net, [1,0])))
-print("1,1 : {} ".format(predict(net, [1,1])))
-
-# print("\n\n{}\n\n".format(net))
-
-plot_loss(lss)
+task_2_4()

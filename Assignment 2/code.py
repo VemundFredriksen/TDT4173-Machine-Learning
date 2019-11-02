@@ -79,11 +79,38 @@ TODO : implement early stop
 def fit(network, data, truths, loss_function, loss_derivative, learning_rate = 0.05, epochs = 100, early_stop = False):
     losses = []
 
+    data_batch = []
+    truth_batch = []
+    temp = []
+    temp1 = []
+    for i in range(len(data)):
+        if (i == len(data) - 1):
+            temp.append(data[i])
+            temp1.append(truths[i])
+            data_batch.append(np.array(temp))
+            truth_batch.append(np.array(temp1))
+        elif (i % 128 == 127):
+            temp.append(data[i])
+            temp1.append(truths[i])
+            data_batch.append(np.array(temp))
+            truth_batch.append(np.array(temp1))
+            temp = []
+            temp1 = []
+        else:
+            temp.append(data[i])
+            temp1.append(truths[i])
+
+    data = np.array(data_batch)
+    truths = np.array(truth_batch)
+
     for e in tqdm.tqdm(range(epochs)):
-        prediction = predict(network, data)
-        losses.append(np.sum(loss_function(prediction, truths)))
-        activations, deltas = calculate_deltas(network, data, truths, loss_derivative)
-        update_weights(network, activations, deltas, learning_rate)
+        loss = 0
+        for i in range(len(data)):
+            prediction = predict(network, data[i])
+            loss += np.sum(loss_function(prediction, truths[i]))
+            activations, deltas = calculate_deltas(network, data[i], truths[i], loss_derivative)
+            update_weights(network, activations, deltas, learning_rate)
+        losses.append(loss)
 
     return losses
 
@@ -113,10 +140,10 @@ l1 : number of nodes in first layer
 l2 : number of nodes in next layer
 '''
 def random_weights(l1, l2):
-    return np.random.uniform(size = (l1, l2))
+    return np.random.uniform(1,-1,size = (l1, l2))
 
 def random_bias(layer):
-    return np.random.uniform(size = (1, layer))
+    return np.random.uniform(1,-1,size = (1, layer))
 
 # ======================= Init network ============================= #
 
@@ -164,6 +191,7 @@ def task_2_4():
 
     print("Training the network\nlearning rate: {}\nepochs: {}\nTraining...\n".format(learning_rate, epochs))
     losses = fit(net, data, truths, cross_entropy, cross_entropy_derivative, learning_rate, epochs)
+
     print("Training finished!\n")
 
     print("Networks prediction after training:\n")
@@ -189,7 +217,9 @@ def task_2_5():
     #Loads the images and labels
     data = load_digits()
 
-    tr_data = data["data"]
+    val = 0
+
+    tr_data = (data["data"]/8) - 1
     target = encode(data["target"], 10)
 
     arr = [64,32,10]
@@ -198,7 +228,29 @@ def task_2_5():
 
     net = init(arr, func, der_func)
 
-    losses = fit(net, tr_data, target, cross_entropy, cross_entropy_derivative, learning_rate=10, epochs=100)
+    #for i in net:
+        #print(i.weights[0][:10])
+    #print(predict(net, tr_data[0]))
+
+    losses = fit(net, tr_data, target, cross_entropy, cross_entropy_derivative, learning_rate=0.001, epochs=4000)
+
+    #print(predict(net, tr_data[0]))
+    #for i in net:
+        #print(i.weights[0][:10])
+
+    successes = 0
+    total = 0
+
+    for i in range(len(tr_data)):
+        pred = predict(net, tr_data[i])
+        if (target[i][np.array(pred[0]).argmax()] == 1.0):
+            successes += 1
+        total += 1
+    
+    print(successes)
+    print(total)
+
     plot_loss(losses)
+    
 
 task_2_5()

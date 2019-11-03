@@ -76,32 +76,8 @@ epochs : maximum number of epochs
 early_stop: stops the training if it manages a whole epoch with precision = recall = 1.0
 TODO : implement early stop
 '''
-def fit(network, data, truths, loss_function, loss_derivative, learning_rate = 0.05, epochs = 100, early_stop = False):
+def fit(network, data, truths, loss_function, loss_derivative, learning_rate = 0.05, epochs = 100):
     losses = []
-
-    data_batch = []
-    truth_batch = []
-    temp = []
-    temp1 = []
-    for i in range(len(data)):
-        if (i == len(data) - 1):
-            temp.append(data[i])
-            temp1.append(truths[i])
-            data_batch.append(np.array(temp))
-            truth_batch.append(np.array(temp1))
-        elif (i % 128 == 127):
-            temp.append(data[i])
-            temp1.append(truths[i])
-            data_batch.append(np.array(temp))
-            truth_batch.append(np.array(temp1))
-            temp = []
-            temp1 = []
-        else:
-            temp.append(data[i])
-            temp1.append(truths[i])
-
-    data = np.array(data_batch)
-    truths = np.array(truth_batch)
 
     for e in tqdm.tqdm(range(epochs)):
         loss = 0
@@ -158,10 +134,40 @@ def init(layers, act_func, der_act_func):
         net.append(l)
     return net
 
+# ================= Onehot endcodes desired values ================= #
+
 def encode(target, classes):
     onehot = np.zeros((target.shape[0], classes))
     onehot[np.arange(0, target.shape[0]), target] = 1
     return onehot
+
+# ======================== Batch function ========================== #
+
+def batch_it(data, truths, batch_size = 32):
+    data_batch = []
+    truth_batch = []
+    temp = []
+    temp1 = []
+    for i in range(len(data)):
+        if (i == len(data) - 1):
+            temp.append(data[i])
+            temp1.append(truths[i])
+            data_batch.append(np.array(temp))
+            truth_batch.append(np.array(temp1))
+        elif (i % batch_size == batch_size - 1):
+            temp.append(data[i])
+            temp1.append(truths[i])
+            data_batch.append(np.array(temp))
+            truth_batch.append(np.array(temp1))
+            temp = []
+            temp1 = []
+        else:
+            temp.append(data[i])
+            temp1.append(truths[i])
+
+    data = np.array(data_batch)
+    truths = np.array(truth_batch)
+    return data, truths
 
 # ======================== Assignment Tasks ======================== #
 
@@ -185,12 +191,14 @@ def task_2_4():
     data = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     truths = np.array([[0], [1], [1], [0]])
 
+    train_data, train_target = batch_it(data, truths, 4)
+
     #Train the network
     learning_rate = 0.8
     epochs = 1500
 
     print("Training the network\nlearning rate: {}\nepochs: {}\nTraining...\n".format(learning_rate, epochs))
-    losses = fit(net, data, truths, cross_entropy, cross_entropy_derivative, learning_rate, epochs)
+    losses = fit(net, train_data, train_target, cross_entropy, cross_entropy_derivative, learning_rate, epochs)
 
     print("Training finished!\n")
 
@@ -205,22 +213,18 @@ def task_2_4():
 
 from sklearn.datasets import load_digits
 
-def softmax(x):
-    exps = np.exp(x)
-    return exps / np.sum(exps)
-
-def softmax_der(x):
-    s = x.reshape(-1,1)
-    return np.diagflat(s) - np.dot(s, s.T)
-
 def task_2_5():
     #Loads the images and labels
     data = load_digits()
 
-    val = 0
-
     tr_data = (data["data"]/8) - 1
     target = encode(data["target"], 10)
+
+    batch_size = 128
+    learning_rate = 0.001
+    epochs = 2000
+
+    should_plot_loss = False
 
     arr = [64,32,10]
     func = [vector_sigmoid, vector_sigmoid]
@@ -228,29 +232,26 @@ def task_2_5():
 
     net = init(arr, func, der_func)
 
-    #for i in net:
-        #print(i.weights[0][:10])
-    #print(predict(net, tr_data[0]))
+    train_data, train_target = batch_it(tr_data, target, batch_size)
 
-    losses = fit(net, tr_data, target, cross_entropy, cross_entropy_derivative, learning_rate=0.001, epochs=4000)
+    losses = fit(net, train_data, train_target, cross_entropy, cross_entropy_derivative, learning_rate, epochs)
 
-    #print(predict(net, tr_data[0]))
-    #for i in net:
-        #print(i.weights[0][:10])
+    confusion_matrix = [[0 for i in range(10)]for j in range(10)]
 
-    successes = 0
-    total = 0
+    pred = predict(net, tr_data)
 
-    for i in range(len(tr_data)):
-        pred = predict(net, tr_data[i])
-        if (target[i][np.array(pred[0]).argmax()] == 1.0):
-            successes += 1
-        total += 1
-    
-    print(successes)
-    print(total)
+    for i in range(len(pred)):
+        confusion_matrix[target[i].argmax()][pred[i].argmax()] += 1
 
-    plot_loss(losses)
-    
+    for i in confusion_matrix:
+        for j in i:
+            if (len(str(j)) == 1):
+                print(f"  {j}   ", end = "")
+            elif (len(str(j)) == 2):
+                print(f" {j}   ", end = "")
+            else:
+                print(f"{j}   ", end = "")
+        print("\n")
+
 
 task_2_5()

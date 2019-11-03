@@ -82,10 +82,9 @@ def fit(network, data, truths, loss_function, loss_derivative, learning_rate = 0
     for e in tqdm.tqdm(range(epochs)):
         loss = 0
         for i in range(len(data)):
-            prediction = predict(network, data[i])
-            loss += np.sum(loss_function(prediction, truths[i]))
             activations, deltas = calculate_deltas(network, data[i], truths[i], loss_derivative)
             update_weights(network, activations, deltas, learning_rate)
+            loss += np.sum(loss_function(activations[-1], truths[i]))
         losses.append(loss)
 
     return losses

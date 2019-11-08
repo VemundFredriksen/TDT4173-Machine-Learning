@@ -223,8 +223,6 @@ def task_2_5():
     learning_rate = 0.001
     epochs = 2000
 
-    should_plot_loss = False
-
     arr = [64,32,10]
     func = [vector_sigmoid, vector_sigmoid]
     der_func = [vector_sigmoid_derivative, vector_sigmoid_derivative]
@@ -233,7 +231,7 @@ def task_2_5():
 
     train_data, train_target = batch_it(tr_data, target, batch_size)
 
-    losses = fit(net, train_data, train_target, cross_entropy, cross_entropy_derivative, learning_rate, epochs)
+    fit(net, train_data, train_target, cross_entropy, cross_entropy_derivative, learning_rate, epochs)
 
     confusion_matrix = [[0 for i in range(10)]for j in range(10)]
 

@@ -38,6 +38,12 @@ def knn(neighbours, value, k = 10):
             distances[i] = distance
             _neigbours[i] = n
     
+    type = vote(classes, distance, _neigbours)
+    
+    #Returns the most common
+    return type, _neigbours
+
+def vote(classes, distances, k_nearest):
     #Finds the most common among k nearest
     types = {}
     for c in classes:
@@ -50,9 +56,8 @@ def knn(neighbours, value, k = 10):
     for k in types.keys():
         if(types[k] > types[type]):
             type = k
-
-    #Returns the most common
-    return type, _neigbours
+            
+    return type
 
 def main():
     data = load_data("./data/knn_classification.csv")

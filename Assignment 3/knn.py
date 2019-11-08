@@ -44,7 +44,7 @@ def knn(neighbours, value, k = 10):
         else:
             types[c] = types[c] + 1
     
-    type = types[classes[0]]
+    type = classes[0]
     for k in types.keys():
         if(types[k] > types[type]):
             type = k
@@ -55,8 +55,9 @@ def knn(neighbours, value, k = 10):
 
 def main():
     data = load_data("./data/knn_classification.csv")
-    d1 = data[0]
-    knn(data, d1)
+    d1 = data[124]
+    data[124] = [20, 20, 20, 20, 20]
+    print(knn(data, d1))
     
 
 main()

@@ -1,4 +1,3 @@
-import pandas as pd
 import math
 
 '''
@@ -17,16 +16,18 @@ def load_data(filename):
             k.append(t)
             
         return k
- 
 
+#Simple euclidian distnace function
 def euclidian_distance(e1, e2):
-    return math.sqrt((e1[0] - e2[0])**2 + (e1[1] - e2[1])**2 + (e1[2] - e2[2])**2)
+    return math.sqrt((e1[0] - e2[0])**2 + (e1[1] - e2[1])**2 + (e1[2] - e2[2])**2 + (e1[3] - e2[3])**2)
 
+#KNN With Voting
 def knn(neighbours, value, k = 10):
 
     #Initializes the K nearest storage
     classes = [0 for i in range(k)]
     distances = [float('inf') for i in range(k)]
+    _neigbours = [None for i in range(k)]
 
     #Finds the K nearest
     for n in neighbours:
@@ -35,6 +36,7 @@ def knn(neighbours, value, k = 10):
             i = distances.index(max(distances))
             classes[i] = n[4]
             distances[i] = distance
+            _neigbours[i] = n
     
     #Finds the most common among k nearest
     types = {}
@@ -50,14 +52,18 @@ def knn(neighbours, value, k = 10):
             type = k
 
     #Returns the most common
-    return type
-
+    return type, _neigbours
 
 def main():
     data = load_data("./data/knn_classification.csv")
-    d1 = data[124]
-    data[124] = [20, 20, 20, 20, 20]
-    print(knn(data, d1))
-    
 
+    #Task 1
+    print("\n\nFetching element 124 and performing classification...")
+    d1 = data[123]
+    (type, neighbours) = knn(data, d1)
+    print("Element {} is predicted to be of class {}".format(124, type))
+    print("10 nearest neighbours in random order:")
+    for n in neighbours:
+        print(n)
+    
 main()

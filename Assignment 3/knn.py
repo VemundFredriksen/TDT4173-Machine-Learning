@@ -1,23 +1,30 @@
 import pandas as pd
 import math
 
+'''
+element = [x1, x2, x3, x4, y]
+'''
 def load_data(path):
     return pd.read_csv(path) 
 
 def euclidian_distance(e1, e2):
-    return math.sqrt((e1['x1'] - e2['x1'])**2 + (e1['x2'] - e2['x2'])**2 + (e1['x3'] - e2['x3'])**2)
+    return math.sqrt((e1[0] - e2[0])**2 + (e1[1] - e2[1])**2 + (e1[2] - e2[2])**2)
 
 def knn(neighbours, value, k = 10):
+
+    #Initializes the K nearest storage
     classes = [0 for i in range(k)]
     distances = [float('inf') for i in range(k)]
 
-    for n in neighbours:
+    #Finds the K nearest
+    for n in neighbours.iloc:
         distance = euclidian_distance(n, value)
         if(distance < max(distances)):
             index = index(max(distances))
             classes[index] = n['y']
             distances[index] = distance
     
+    #Finds the most common among k nearest
     types = {}
     for c in classes:
         if(not types[c]):
@@ -27,15 +34,16 @@ def knn(neighbours, value, k = 10):
     
     type = types[types.keys()[0]]
     for k in types.keys():
-        print(k)
+        if(types[k] > types[type]):
+            type = types[k]
+
+    #Returns the most common
+    return type
 
 
 def main():
-    #Load data
     data = load_data("./data/knn_classification.csv")
-    d1 = data.iloc[1]
-    d2 = data.iloc[2]
-    print(data.iloc[124])
+    d1 = data[0]
     knn(data, d1)
     
 

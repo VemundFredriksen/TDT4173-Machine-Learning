@@ -52,20 +52,29 @@ def load_chars_dataset():
                 img.load()
                 img = np.asarray(img)
 
+                #feature engineering. invert colors of image to expand data set
+                img_invert = np.copy(img)
+                img_invert = np.invert(img_invert)
+
                 #feature engineering. Removing noise from the images
                 img = denoise_tv_chambolle(img, weight=0.1, multichannel=False)
+                img_invert = denoise_tv_chambolle(img_invert, weight=0.1, multichannel=False)
 
                 #feature engineering. Normalizing the image vectors
                 img = img / np.linalg.norm(img)
+                img_invert = img_invert / np.linalg.norm(img_invert)
 
-                #img = feature.canny(img, 0.1)
-
+                #flatten the images into 2-d arrays
                 img = img.flatten()
+                img_invert = img_invert.flatten()
 
+                label = char_to_int[root[-1]]
 
                 X.append(img)
-                y.append(char_to_int[root[-1]])
+                y.append(label)
 
+                X.append(img_invert)
+                y.append(label)
 
     X = np.array(X)
     y = np.array(y)

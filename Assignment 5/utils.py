@@ -31,7 +31,7 @@ def load_detection_images():
     img_2 = Image.open(dir + "detection-2.jpg")
     img_1 = np.asarray(img_1)
     img_2 = np.asarray(img_2)
-    return img_1 / np.linalg.norm(img_1), img_2 / np.linalg.norm(img_2)
+    return img_1, img_2
 
 def load_chars_dataset():
     """
@@ -56,9 +56,6 @@ def load_chars_dataset():
                 img_invert = np.copy(img)
                 img_invert = np.invert(img_invert)
 
-                #feature engineering. Removing noise from the images
-                img = denoise_tv_chambolle(img, weight=0.1, multichannel=False)
-                img_invert = denoise_tv_chambolle(img_invert, weight=0.1, multichannel=False)
 
                 #feature engineering. Normalizing the image vectors
                 img = img / np.linalg.norm(img)
@@ -81,5 +78,14 @@ def load_chars_dataset():
 
     return X, y
 
+def get_label(i):
+    """
+    convert int label to correct letter
+    """
+    return letters[i]
+
 def show_image(x):
+    """
+    just prints flattened imgs as 20x20 images
+    """
     plt.imshow(np.reshape(x, (20, 20)), cmap="gray")

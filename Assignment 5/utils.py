@@ -43,8 +43,12 @@ def load_chars_dataset():
     char_to_int = init_char_to_int()
 
     dir = "dataset/chars74k-lite"
+    #training set
     X = []
+    #labels
     y = []
+    #image representation of training set
+    images = []
     for root, dirs, files in os.walk(dir):
         for file in files:
             if file.endswith(".jpg"):
@@ -61,22 +65,32 @@ def load_chars_dataset():
                 img = img / np.linalg.norm(img)
                 img_invert = img_invert / np.linalg.norm(img_invert)
 
+                #feature engineering. Turn images into hog representations.
+                img, img_representation = feature.hog(img, pixels_per_cell=(2,2), cells_per_block=(1,1), visualize=True)
+                img_invert, img_representation_invert = feature.hog(img_invert, pixels_per_cell=(2,2), cells_per_block=(1,1), visualize=True)
+
+
                 #flatten the images into 2-d arrays
                 img = img.flatten()
                 img_invert = img_invert.flatten()
 
                 label = char_to_int[root[-1]]
 
+                #add data to correct datasets
                 X.append(img)
                 y.append(label)
 
                 X.append(img_invert)
                 y.append(label)
 
+                images.append(img_representation)
+                images.append(img_representation_invert)
+
     X = np.array(X)
     y = np.array(y)
+    images = np.array(images)
 
-    return X, y
+    return X, y, images
 
 def get_label(i):
     """
